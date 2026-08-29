@@ -174,6 +174,26 @@ an explicit flag that the resume doesn't support a strong answer here)
 Do not add your own sources/citations section — that's appended separately from your \
 search results directly, so don't duplicate it.`;
 
+export const SYSTEM_INTERVIEW_PREP_NO_SEARCH = `You are an Interview Preparation Coach drafting resume-grounded answers for a job candidate. In this run you do NOT have live web search access: base the company snapshot only on your own knowledge, and explicitly mark anything you are not confident about as unverified instead of presenting it as research-backed.
+
+HARD RULES ON DRAFTED ANSWERS
+- Draft every answer using ONLY what's in the candidate's resume provided below. Never invent an accomplishment, metric, employer, or experience the resume doesn't contain.
+- If a likely question doesn't have strong resume evidence behind it, say so explicitly - name the gap and suggest what kind of real example the candidate should think of instead - rather than fabricating a plausible-sounding answer.
+- Use STAR format (Situation, Task, Action, Result) for behavioral answers where the resume supports it.
+
+OUTPUT FORMAT (markdown, exactly these headers):
+## Company Snapshot
+(what you know about the company from your own knowledge; label uncertain items as unverified)
+## Likely Interview Questions & Draft Answers
+### Behavioral
+### Role & Technical
+### Company & Culture Fit
+(for each question: the question, then either a drafted answer grounded in the resume, or an explicit flag that the resume doesn't support a strong answer here)
+## Questions to Ask Them
+(a few thoughtful questions, specific to this company where your knowledge supports it)
+
+Do not add a sources/citations section.`;
+
 export async function runInterviewPrep(params: {
   jobPostText: string;
   jobTitle?: string | null;
@@ -191,7 +211,24 @@ CANDIDATE'S RESUME (the only source of truth for drafting answers):
 
 ${params.resumeMarkdown}`;
 
-  return callGeminiWithSearch(SYSTEM_INTERVIEW_PREP, userMessage, MODEL_QUALITY);
+  try {
+    return await callGeminiWithSearch(
+      SYSTEM_INTERVIEW_PREP,
+      userMessage,
+      MODEL_QUALITY
+    );
+  } catch (err) {
+    console.warn(
+      "Search grounding unavailable; falling back to non-search generation:",
+      err
+    );
+    const result = await callGemini(
+      SYSTEM_INTERVIEW_PREP_NO_SEARCH,
+      userMessage,
+      MODEL_QUALITY
+    );
+    return { ...result, sources: [] };
+  }
 }
 
 // ---- Extraction helpers (best-effort regex parsing of agent markdown output) ----

@@ -136,6 +136,14 @@ export default async function ApplicationDetailPage({
             Researches the company · drafts answers from your resume only
           </div>
           <MarkdownBlock content={latestInterviewPrep.contentMd} />
+          {(!Array.isArray(latestInterviewPrep.sources) ||
+            latestInterviewPrep.sources.length === 0) && (
+            <div className="mt-5 pt-4 border-t border-rule font-mono text-[11px] text-ink-soft">
+              Prepared from the model's knowledge - live Google Search isn't
+              enabled on the current Gemini plan, so company details aren't
+              research-verified.
+            </div>
+          )}
           {Array.isArray(latestInterviewPrep.sources) &&
             latestInterviewPrep.sources.length > 0 && (
               <div className="mt-5 pt-4 border-t border-rule">
