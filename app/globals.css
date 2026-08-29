@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #e7e2d5;
+  --paper-hi: #f1ecdf;
+  --tab: #d7cfb8;
+  --ink: #241f19;
+  --ink-soft: #6c6252;
+  --rule: #b9af95;
+  --green: #2f5d45;
+  --amber: #b4762a;
+  --red: #a6362b;
+  --blue: #3b5578;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-hi: var(--paper-hi);
+  --color-tab: var(--tab);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-rule: var(--rule);
+  --color-green: var(--green);
+  --color-amber: var(--amber);
+  --color-red: var(--red);
+  --color-blue: var(--blue);
+  --font-display: "Fraunces", serif;
+  --font-body: "Inter", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+.prose-agent h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin: 1.25rem 0 0.4rem;
+}
+.prose-agent h2:first-child {
+  margin-top: 0;
+}
+.prose-agent h3 {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  margin: 1rem 0 0.35rem;
+}
+.prose-agent p {
+  margin: 0.35rem 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+.prose-agent ul {
+  margin: 0.35rem 0;
+  padding-left: 1.2rem;
+  list-style: disc;
+}
+.prose-agent li {
+  margin: 0.15rem 0;
+  font-size: 0.9rem;
+}
+.prose-agent strong {
+  color: var(--ink);
+}
+.prose-agent code {
+  background: var(--tab);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}

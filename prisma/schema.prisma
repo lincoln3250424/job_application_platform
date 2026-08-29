@@ -1,0 +1,187 @@
+// Prisma schema for the Job Application Review Platform
+// Trimmed from the full system design: no OAuth/accounts table yet, no API tokens for a
+// browser extension yet. Stripe billing (User.plan/stripeCustomerId, Subscription,
+// WebhookEvent) is included. Add OAuth/extension tables when those features are built
+// (see README "What's next").
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String   @id @default(uuid())
+  email             String   @unique
+  passwordHash      String
+  displayName       String?
+  emailVerifiedAt   DateTime?
+  plan              String   @default("free") // 'free' | 'pro' | 'premium' — kept in sync by the Stripe webhook, never checked against Stripe at request time
+  monthlyRunQuota   Int      @default(10)
+  stripeCustomerId  String?  @unique
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  baseResumes   BaseResume[]
+  applications  Application[]
+  emailLogs     EmailLog[]
+  subscription  Subscription?
+
+  @@map("users")
+}
+
+model BaseResume {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label     String   @default("My resume")
+  content   String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  applications Application[]
+
+  @@index([userId])
+  @@map("base_resumes")
+}
+
+enum FetchMethod {
+  paste
+  url_scrape
+  extension
+}
+
+enum ApplicationStatus {
+  active
+  archived
+}
+
+model Application {
+  id                String            @id @default(uuid())
+  userId            String
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  baseResumeId      String?
+  baseResume        BaseResume?       @relation(fields: [baseResumeId], references: [id], onDelete: SetNull)
+  jobTitle          String?
+  companyName       String?
+  jobPostText       String
+  jobPostSourceUrl  String?
+  fetchMethod       FetchMethod       @default(paste)
+  status            ApplicationStatus @default(active)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  requirementAnalysis RequirementAnalysis?
+  resumeDrafts        ResumeDraft[]
+  emailLogs            EmailLog[]
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@map("applications")
+}
+
+model RequirementAnalysis {
+  id            String      @id @default(uuid())
+  applicationId String      @unique
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  contentMd     String
+  modelUsed     String
+  createdAt     DateTime    @default(now())
+
+  @@map("requirement_analyses")
+}
+
+model ResumeDraft {
+  id                   String      @id @default(uuid())
+  applicationId        String
+  application          Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  draftNumber          Int
+  contentMd            String
+  structuredJson       Json?       // JSON Resume-shaped data, populated lazily on first export
+  matchScore           Int?
+  hardGatePassRate     String?
+  interviewLikelihood  String?
+  offerLikelihood      String?
+  isFinal              Boolean     @default(false)
+  modelUsed            String
+  createdAt            DateTime    @default(now())
+
+  review Review?
+
+  @@unique([applicationId, draftNumber])
+  @@index([applicationId])
+  @@map("resume_drafts")
+}
+
+enum ReviewVerdict {
+  strong
+  stretch
+  mismatch
+}
+
+model Review {
+  id            String        @id @default(uuid())
+  resumeDraftId String        @unique
+  resumeDraft   ResumeDraft   @relation(fields: [resumeDraftId], references: [id], onDelete: Cascade)
+  contentMd     String
+  verdict       ReviewVerdict?
+  modelUsed     String
+  createdAt     DateTime      @default(now())
+
+  @@map("reviews")
+}
+
+enum EmailType {
+  verification
+  password_reset
+  resume_export
+}
+
+model EmailLog {
+  id            String       @id @default(uuid())
+  userId        String
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applicationId String?
+  application   Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  type          EmailType
+  sentTo        String
+  status        String       @default("sent")
+  createdAt     DateTime     @default(now())
+
+  @@index([userId, createdAt])
+  @@map("email_log")
+}
+
+// ============================================================
+// BILLING (Stripe)
+// ============================================================
+
+model Subscription {
+  id                     String   @id @default(uuid())
+  userId                 String   @unique
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeSubscriptionId   String   @unique
+  stripePriceId          String
+  plan                   String   // 'pro' | 'premium' — mirrors the price ID for readability
+  status                 String   // 'active' | 'trialing' | 'past_due' | 'canceled' | 'unpaid' | 'incomplete'
+  currentPeriodEnd       DateTime?
+  cancelAtPeriodEnd      Boolean  @default(false)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@map("subscriptions")
+}
+
+// Stripe redelivers webhook events; this makes handling them idempotent —
+// see lib/stripe.ts / the webhook route for how it's used.
+model WebhookEvent {
+  stripeEventId String   @id
+  type          String
+  processedAt   DateTime @default(now())
+
+  @@map("webhook_events")
+}
