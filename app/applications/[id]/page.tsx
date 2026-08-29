@@ -22,6 +22,10 @@ export default async function ApplicationDetailPage({
         orderBy: { draftNumber: "asc" },
         include: { review: true },
       },
+      interviewPreps: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+      },
     },
   });
 
@@ -30,12 +34,14 @@ export default async function ApplicationDetailPage({
   }
 
   const latestDraft = application.resumeDrafts[application.resumeDrafts.length - 1];
+  const latestInterviewPrep = application.interviewPreps[0];
   const needsRetry =
     !application.requirementAnalysis ||
     application.resumeDrafts.length === 0 ||
     !latestDraft?.review;
   const canRevise = !!latestDraft?.review;
   const canEmail = application.resumeDrafts.length > 0;
+  const canPrepInterview = application.resumeDrafts.length > 0;
 
   return (
     <div className="space-y-8">
@@ -120,12 +126,50 @@ export default async function ApplicationDetailPage({
         </div>
       ))}
 
+      {latestInterviewPrep && (
+        <section className="bg-paper-hi border border-rule rounded-lg p-6">
+          <div className="font-mono text-[11px] uppercase tracking-wide text-ink-soft mb-1">
+            Optional
+          </div>
+          <h2 className="font-display font-bold text-xl mb-1">The Interview Coach</h2>
+          <div className="font-mono text-[11px] text-ink-soft mb-4">
+            Researches the company · drafts answers from your resume only
+          </div>
+          <MarkdownBlock content={latestInterviewPrep.contentMd} />
+          {Array.isArray(latestInterviewPrep.sources) &&
+            latestInterviewPrep.sources.length > 0 && (
+              <div className="mt-5 pt-4 border-t border-rule">
+                <div className="font-mono text-[11px] uppercase tracking-wide text-ink-soft mb-2">
+                  Sources
+                </div>
+                <ul className="space-y-1">
+                  {(latestInterviewPrep.sources as { title: string; uri: string }[]).map(
+                    (source, i) => (
+                      <li key={i}>
+                        <a
+                          href={source.uri}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-blue underline break-all"
+                        >
+                          {source.title}
+                        </a>
+                      </li>
+                    )
+                  )}
+                </ul>
+              </div>
+            )}
+        </section>
+      )}
+
       <ApplicationActions
         applicationId={application.id}
         needsRetry={needsRetry}
         canRevise={canRevise}
         canEmail={canEmail}
         canExport={canEmail}
+        canPrepInterview={canPrepInterview}
       />
     </div>
   );

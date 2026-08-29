@@ -1,4 +1,4 @@
-import { callGemini, MODEL_FAST, MODEL_QUALITY, LLMResult } from "./gemini";
+import { callGemini, callGeminiWithSearch, MODEL_FAST, MODEL_QUALITY, LLMResult, LLMResultWithSources } from "./gemini";
 
 export const SYSTEM_ANALYST = `You are a Senior Technical Recruiter with 15+ years of experience writing and \
 vetting job requisitions across tech, product, and operations roles. You know the difference \
@@ -131,6 +131,67 @@ export async function runReviewer(
     `EDITOR'S POLISHED RESUME + EVALUATION:\n\n${polishedResumeMd}\n\n` +
     `ORIGINAL RAW RESUME (for fact-checking):\n\n${rawResumeText}`;
   return callGemini(SYSTEM_REVIEWER, userMessage, MODEL_QUALITY);
+}
+
+export const SYSTEM_INTERVIEW_PREP = `You are an Interview Preparation Coach who combines real research with honest, \
+resume-grounded answer drafting. You have access to Google Search — use it, don't rely on \
+what you already know about the company.
+
+RESEARCH INSTRUCTIONS
+1. Search for the company's website, mission/values, products, and any recent news relevant \
+to understanding what this specific role likely needs to deliver.
+2. Search Reddit and similar forums for real interview experiences at this company (e.g. \
+"[Company] interview reddit", "[Company] interview questions", "[Company] interview \
+process"). Note concrete patterns: interview stages, question style, take-home tests, \
+anything candidates reported as surprising. If you find nothing specific to this company, \
+say so plainly in the output rather than inventing generic filler and presenting it as if \
+it were research-backed.
+3. Let what you actually find shape which questions you predict — don't just default to a \
+generic list and bolt research on top.
+
+HARD RULES ON DRAFTED ANSWERS
+- Draft every answer using ONLY what's in the candidate's resume provided below. Never \
+invent an accomplishment, metric, employer, or experience the resume doesn't contain.
+- If a likely question doesn't have strong resume evidence behind it, say so explicitly — \
+name the gap and suggest what kind of real example the candidate should think of instead — \
+rather than fabricating a plausible-sounding answer.
+- Use STAR format (Situation, Task, Action, Result) for behavioral answers where the resume \
+supports it.
+
+OUTPUT FORMAT (markdown, exactly these headers):
+## Company Snapshot
+(culture/values, recent news, and anything found about their actual interview process — \
+state plainly if little or nothing company-specific turned up)
+## Likely Interview Questions & Draft Answers
+### Behavioral
+### Role & Technical
+### Company & Culture Fit
+(for each question: the question, then either a drafted answer grounded in the resume, or \
+an explicit flag that the resume doesn't support a strong answer here)
+## Questions to Ask Them
+(a few research-informed questions — specific to this company, not generic ones)
+
+Do not add your own sources/citations section — that's appended separately from your \
+search results directly, so don't duplicate it.`;
+
+export async function runInterviewPrep(params: {
+  jobPostText: string;
+  jobTitle?: string | null;
+  companyName?: string | null;
+  resumeMarkdown: string;
+}): Promise<LLMResultWithSources> {
+  const userMessage = `JOB TITLE: ${params.jobTitle || "Unknown"}
+COMPANY: ${params.companyName || "Unknown — infer from the job post if possible, otherwise research generically for the role"}
+
+JOB POST:
+
+${params.jobPostText}
+
+CANDIDATE'S RESUME (the only source of truth for drafting answers):
+
+${params.resumeMarkdown}`;
+
+  return callGeminiWithSearch(SYSTEM_INTERVIEW_PREP, userMessage, MODEL_QUALITY);
 }
 
 // ---- Extraction helpers (best-effort regex parsing of agent markdown output) ----

@@ -9,6 +9,7 @@ type Props = {
   canRevise: boolean;
   canEmail: boolean;
   canExport: boolean;
+  canPrepInterview: boolean;
 };
 
 export function ApplicationActions({
@@ -17,6 +18,7 @@ export function ApplicationActions({
   canRevise,
   canEmail,
   canExport,
+  canPrepInterview,
 }: Props) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
@@ -52,6 +54,12 @@ export function ApplicationActions({
 
   async function handleRevise() {
     if (await call("/revise", "revise")) {
+      router.refresh();
+    }
+  }
+
+  async function handleInterviewPrep() {
+    if (await call("/interview-prep", "interview-prep")) {
       router.refresh();
     }
   }
@@ -130,6 +138,17 @@ export function ApplicationActions({
               Download DOCX
             </a>
           </>
+        )}
+        {canPrepInterview && (
+          <button
+            onClick={handleInterviewPrep}
+            disabled={!!busy}
+            className="font-mono text-xs uppercase tracking-wide border border-rule px-5 py-3 rounded-md hover:border-ink disabled:opacity-50"
+          >
+            {busy === "interview-prep"
+              ? "Researching the company…"
+              : "Prep me for the interview"}
+          </button>
         )}
         <button
           onClick={handleDelete}

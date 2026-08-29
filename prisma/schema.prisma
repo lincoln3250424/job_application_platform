@@ -78,6 +78,7 @@ model Application {
   requirementAnalysis RequirementAnalysis?
   resumeDrafts        ResumeDraft[]
   emailLogs            EmailLog[]
+  interviewPreps       InterviewPrep[]
 
   @@index([userId])
   @@index([userId, createdAt])
@@ -157,9 +158,27 @@ model EmailLog {
 }
 
 // ============================================================
-// BILLING (Stripe)
+// INTERVIEW PREP (Agent 4 — optional, on-demand, not part of the
+// Analyst -> Editor -> Reviewer chain)
 // ============================================================
 
+model InterviewPrep {
+  id            String      @id @default(uuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  resumeDraftId String?     // which resume draft the answers were grounded in, if known
+  contentMd     String
+  sources       Json?       // [{ title, uri }] extracted from Google Search grounding metadata
+  modelUsed     String
+  createdAt     DateTime    @default(now())
+
+  @@index([applicationId])
+  @@map("interview_preps")
+}
+
+// ============================================================
+// BILLING (Stripe)
+// ============================================================
 model Subscription {
   id                     String   @id @default(uuid())
   userId                 String   @unique

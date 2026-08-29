@@ -18,18 +18,21 @@ section for the reasoning).
   NextAuth/Auth.js — a lighter hand-rolled version since OAuth isn't wired up yet; adding
   Google OAuth later means swapping this for Auth.js, not a full rewrite)
 - **Database**: PostgreSQL via Prisma, schema at `prisma/schema.prisma` (trimmed from the
-  full system design — no OAuth/billing tables yet)
+  full system design — no OAuth/accounts or extension-token tables yet)
 - **LLM**: Gemini via `@google/genai` — Flash for the Analyst and Fetcher's extraction
-  step (cheap), Pro for the Editor and Reviewer (judgment-heavy stages) — see
-  `lib/gemini.ts` to change models
+  step (cheap), Pro for the Editor, Reviewer, and Interview Coach (judgment/research-heavy
+  stages) — see `lib/gemini.ts` to change models
 - **URL scraping (Agent 0 / Fetcher)**: paste a URL instead of pasting text — see
   "URL scraping" below for exactly what it does and doesn't handle
+- **Interview prep (Agent 4 / Interview Coach)**: on-demand, researches the company with
+  real Google Search and drafts resume-grounded answers to likely questions — see
+  "Interview prep" below
 - **PDF/DOCX export**: download the final resume as a real Word or PDF document, not a
   markdown dump — see "PDF/DOCX export" below
 - **Stripe billing**: Checkout + Customer Portal + webhooks, gating the monthly run
   quota — see "Payments (Stripe)" below
-- **Pipeline**: runs **synchronously inside the API request** (no job queue yet) — see
-  "Why synchronous" below
+- **Pipeline**: the core Analyst → Editor → Reviewer chain runs **synchronously inside the
+  API request** (no job queue yet) — see "Why synchronous" below
 - **Email**: Resend, sends the final resume + job post to the logged-in user's own address
 - **UI**: carries forward the "dossier" visual language from the earlier prototype
 
@@ -74,11 +77,12 @@ needed for a fresh project. (Once you have real data you care about, switch to
 tracked as reviewable migrations rather than applied ad hoc.)
 
 > **Already set this up before?** The schema now includes a `structuredJson` column on
-> `resume_drafts` (used by PDF/DOCX export), plus `plan`/`stripeCustomerId` on `users` and
-> new `subscriptions`/`webhook_events` tables (used by Stripe billing). Run
-> `npx prisma db push` again against your existing database to add them — all additive,
-> nullable-or-defaulted columns, so this is safe to run against a database that already
-> has real data in it.
+> `resume_drafts` (used by PDF/DOCX export), `plan`/`stripeCustomerId` on `users` plus
+> `subscriptions`/`webhook_events` tables (used by Stripe billing), and a new
+> `interview_preps` table (used by the Interview Coach agent). Run `npx prisma db push`
+> again against your existing database to add them all — additive, nullable-or-defaulted
+> changes throughout, so this is safe to run against a database that already has real data
+> in it.
 
 ### 4. Verify your Resend sending domain
 
@@ -142,6 +146,47 @@ LinkedIn generally does. That's the correct behavior for now. The system design 
 browser-extension section describes the actual right way to support LinkedIn: through
 the user's own authenticated browser session, not server-side scraping. That's still on
 the roadmap, not built here.
+
+## Interview prep
+
+A "Prep me for the interview" button appears on the application page once a resume draft
+exists. Unlike the three core agents, this one is **on-demand** rather than part of the
+automatic pipeline, and it's genuinely different in kind: it uses **Gemini's built-in
+Google Search grounding tool**, so the model can issue real web searches as part of
+generating its response — this isn't a model reasoning from training data about a company,
+it's actually looking things up.
+
+**No new accounts or API keys needed** — grounding is a feature of the Gemini API you
+already have, enabled by passing `tools: [{ googleSearch: {} }]` in the generation config
+(`lib/gemini.ts`, `callGeminiWithSearch`).
+
+What it does (`lib/agents.ts`, `SYSTEM_INTERVIEW_PREP`):
+
+1. **Researches the company** — website, values, recent news — to understand what the role
+   likely needs to deliver, beyond just what's in the job post.
+2. **Searches Reddit and similar forums** for real interview experiences at that company —
+   interview stages, question style, anything candidates have reported. The prompt
+   explicitly instructs the model to say so plainly if it finds nothing company-specific,
+   rather than presenting generic filler as if it were research-backed.
+3. **Drafts answers to likely questions using only the candidate's resume** — same
+   never-fabricate rule as the Editor agent. Where the resume doesn't support a strong
+   answer to a likely question, the output says so explicitly and suggests what kind of
+   real example the candidate should think of instead, rather than inventing one.
+4. **Suggests questions to ask them back**, informed by whatever the research actually
+   turned up.
+
+**Sources are extracted programmatically, not self-reported by the model.** Gemini returns
+structured `groundingMetadata` alongside the response text — a list of the actual pages it
+drew on. The app reads that directly and renders it as a "Sources" list with real links,
+rather than trusting the model to accurately cite itself in the text it generates.
+
+**A structural note on why this isn't part of the automatic pipeline**: it's slower and
+more variable in latency than the three core agents (search grounding means the model may
+issue several searches before responding), and it's genuinely optional — some users will
+want it, others won't need it for every application. Keeping it as a separate action also
+means it doesn't count against the "one run = one pipeline" mental model the quota is
+built around; see "Known low-priority items" below for the cost-tracking implication of
+that choice.
 
 ## PDF/DOCX export
 
@@ -294,6 +339,7 @@ proxy.ts                  Route protection (Next.js 16's replacement for middlew
 | `GET/DELETE /api/applications/:id` | Full detail / delete |
 | `POST /api/applications/:id/run` | Resume a partially-failed pipeline run |
 | `POST /api/applications/:id/revise` | Editor↔Reviewer revision loop, using the latest punch list |
+| `POST /api/applications/:id/interview-prep` | Generate (or regenerate) interview prep using Google Search grounding |
 | `GET /api/applications/:id/export?format=pdf\|docx` | Download the final resume as a real document |
 | `POST /api/applications/:id/email` | Email the final resume + job post to yourself |
 | `POST /api/billing/checkout` | Start a Stripe Checkout session for a plan upgrade |
@@ -327,6 +373,11 @@ app exactly as you will. To still verify the code is sound, I:
   Subscription object onto each Subscription Item in a recent Stripe API version. Using
   the old location would have compiled fine (with `any`-typed data) but silently stored
   the wrong value in the database.
+- **Checked the Gemini SDK's actual type definitions for the Google Search grounding
+  tool** the same way — confirmed the `tools: [{ googleSearch: {} }]` config shape and the
+  `candidates[0].groundingMetadata.groundingChunks[].web.{uri,title}` path for extracting
+  sources, by writing an isolated test file and running `tsc` against it directly (not
+  through the stub), separate from the rest of the app's type-checking.
 - Ran ESLint across the whole project — zero errors.
 
 **What I could not verify here**, and what you should check first: an actual Gemini API
@@ -347,6 +398,20 @@ resume as both formats.
 - Quota checking (`lib/quota.ts`) counts applications created this calendar month — simple
   and good enough for now. The full system design doc's usage-tracking table is a more
   precise, cost-based version to grow into once you care about actual token spend per user.
+- **The Interview Coach doesn't count against the monthly run quota at all** — quota is
+  checked only when an application is created, not on the interview-prep action. This is a
+  real gap once you have paid users: search-grounded generation is likely your most
+  expensive single call (potentially several search queries plus a longer response), and
+  right now a user could hit it repeatedly for free. Fine for validating the feature; add
+  quota enforcement to `/api/applications/[id]/interview-prep` (same pattern as the
+  `checkQuota()` call in the applications route) before this matters financially.
+- **What I couldn't verify about search grounding specifically**: I confirmed the code
+  compiles against the real Gemini SDK types, but I have no way in this sandbox to confirm
+  what the model *actually finds* for a real company on Reddit, or how reliably it follows
+  the "say so plainly if nothing company-specific turns up" instruction versus quietly
+  producing generic-but-plausible-sounding output. Test this specifically with a company
+  that has a well-known Glassdoor/Reddit presence first, and read the "Company Snapshot"
+  section skeptically the first several times you use it.
 
 ## What's next (from the full system design doc, not built here yet)
 
