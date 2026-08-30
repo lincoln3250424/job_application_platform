@@ -6,12 +6,18 @@ import { runEditorAndReviewer, getRevisionNotes } from "@/lib/pipeline";
 export const maxDuration = 60;
 
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await params;
+
+  const body = await req.json().catch(() => null);
+  const additionalInfo =
+    typeof body?.additionalInfo === "string" && body.additionalInfo.trim()
+      ? body.additionalInfo.trim()
+      : undefined;
 
   const application = await prisma.application.findUnique({
     where: { id },
@@ -51,7 +57,8 @@ export async function POST(
       application.requirementAnalysis.contentMd,
       application.baseResume.content,
       latestDraft.draftNumber + 1,
-      revisionNotes
+      revisionNotes,
+      additionalInfo
     );
     return NextResponse.json({ resumeDraft, review }, { status: 201 });
   } catch (err) {

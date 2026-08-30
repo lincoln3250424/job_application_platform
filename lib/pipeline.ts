@@ -77,12 +77,14 @@ export async function runEditorAndReviewer(
   requirementAnalysisMd: string,
   rawResumeText: string,
   draftNumber: number,
-  revisionNotes?: string
+  revisionNotes?: string,
+  additionalInfo?: string
 ) {
   const editorResult = await runEditor(
     requirementAnalysisMd,
     rawResumeText,
-    revisionNotes
+    revisionNotes,
+    additionalInfo
   );
 
   const resumeDraft = await prisma.resumeDraft.create({

@@ -53,7 +53,7 @@ export default async function RootLayout({
             <NavAuthActions loggedIn={!!session} email={session?.email} />
           </div>
         </header>
-        <main className="flex-1 max-w-5xl mx-auto w-full px-5 py-8">
+        <main className="flex-1 max-w-7xl mx-auto w-full px-5 py-8">
           {children}
         </main>
         <footer className="border-t border-rule text-center py-6">

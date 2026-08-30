@@ -110,13 +110,17 @@ export async function runAnalyst(jobPostText: string): Promise<LLMResult> {
 export async function runEditor(
   requirementAnalysisMd: string,
   rawResumeText: string,
-  revisionNotes?: string
+  revisionNotes?: string,
+  additionalInfo?: string
 ): Promise<LLMResult> {
   let userMessage =
     `REQUIREMENT ANALYSIS FROM ANALYST:\n\n${requirementAnalysisMd}\n\n` +
     `RAW RESUME:\n\n${rawResumeText}`;
   if (revisionNotes) {
     userMessage += `\n\nREVISION NOTES FROM PRIOR REVIEWER PASS — address each of these directly:\n\n${revisionNotes}`;
+  }
+  if (additionalInfo) {
+    userMessage += `\n\nADDITIONAL INFORMATION PROVIDED BY THE CANDIDATE — weave this in truthfully where it strengthens the resume and addresses reviewer gaps. Never add claims beyond what is stated here:\n\n${additionalInfo}`;
   }
   return callGemini(SYSTEM_EDITOR, userMessage, MODEL_QUALITY);
 }
