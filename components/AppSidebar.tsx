@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SidebarResumes } from "./SidebarResumes";
+import { SidebarActiveLink } from "./SidebarActiveLink";
 
 const VERDICT_DOT: Record<string, string> = {
   strong: "bg-green",
@@ -39,70 +39,66 @@ export async function AppSidebar() {
   ]);
 
   return (
-    <aside className="w-64 shrink-0 hidden md:block sticky top-8 self-start">
-      <nav className="space-y-6">
-        <div>
-          <div className="font-mono text-[10.5px] uppercase tracking-widest text-ink-soft mb-2">
-            Workspace
-          </div>
-          <Link
-            href="/dashboard"
-            className="block text-sm font-display font-semibold px-2 py-1.5 rounded hover:bg-tab"
-          >
-            New application
-          </Link>
+    <nav className="space-y-7">
+      <div>
+        <div className="font-mono text-[10.5px] uppercase tracking-widest text-ink-soft border-b border-rule pb-2 mb-2">
+          Workspace
         </div>
+        <SidebarActiveLink
+          href="/dashboard"
+          className="block text-sm font-display font-semibold px-2 py-1.5 rounded"
+        >
+          New application
+        </SidebarActiveLink>
+      </div>
 
-        <div>
-          <div className="font-mono text-[10.5px] uppercase tracking-widest text-ink-soft mb-2">
-            Application history
-          </div>
-          {applications.length === 0 ? (
-            <p className="text-xs text-ink-soft italic px-2">
-              Nothing yet.
-            </p>
-          ) : (
-            <ul className="space-y-0.5">
-              {applications.map((app) => {
-                const verdict = app.resumeDrafts[0]?.review?.verdict;
-                return (
-                  <li key={app.id}>
-                    <Link
-                      href={`/applications/${app.id}`}
-                      className="block px-2 py-1.5 rounded hover:bg-tab"
-                    >
-                      <span className="block text-xs font-display font-semibold truncate">
-                        {app.jobTitle || "Untitled role"}
-                        {app.companyName ? ` · ${app.companyName}` : ""}
-                      </span>
-                      <span className="flex items-center gap-1.5 font-mono text-[10px] text-ink-soft mt-0.5">
-                        {new Date(app.createdAt).toLocaleDateString()}
-                        {verdict && (
-                          <span className="flex items-center gap-1">
-                            <span
-                              className={`inline-block w-1.5 h-1.5 rounded-full ${
-                                VERDICT_DOT[verdict] ?? "bg-ink-soft"
-                              }`}
-                            />
-                            {verdict}
-                          </span>
-                        )}
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+      <div>
+        <div className="font-mono text-[10.5px] uppercase tracking-widest text-ink-soft border-b border-rule pb-2 mb-2">
+          Application history
         </div>
+        {applications.length === 0 ? (
+          <p className="text-xs text-ink-soft italic px-2">Nothing yet.</p>
+        ) : (
+          <ul className="space-y-0.5">
+            {applications.map((app) => {
+              const verdict = app.resumeDrafts[0]?.review?.verdict;
+              return (
+                <li key={app.id}>
+                  <SidebarActiveLink
+                    href={`/applications/${app.id}`}
+                    className="block px-2 py-1.5 rounded"
+                  >
+                    <span className="block text-xs font-display font-semibold truncate">
+                      {app.jobTitle || "Untitled role"}
+                      {app.companyName ? ` · ${app.companyName}` : ""}
+                    </span>
+                    <span className="flex items-center gap-1.5 font-mono text-[10px] text-ink-soft mt-0.5">
+                      {new Date(app.createdAt).toLocaleDateString()}
+                      {verdict && (
+                        <span className="flex items-center gap-1">
+                          <span
+                            className={`inline-block w-1.5 h-1.5 rounded-full ${
+                              VERDICT_DOT[verdict] ?? "bg-ink-soft"
+                            }`}
+                          />
+                          {verdict}
+                        </span>
+                      )}
+                    </span>
+                  </SidebarActiveLink>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
 
-        <div>
-          <div className="font-mono text-[10.5px] uppercase tracking-widest text-ink-soft mb-2">
-            Resumes
-          </div>
-          <SidebarResumes resumes={resumes} />
+      <div>
+        <div className="font-mono text-[10.5px] uppercase tracking-widest text-ink-soft border-b border-rule pb-2 mb-2">
+          Resumes
         </div>
-      </nav>
-    </aside>
+        <SidebarResumes resumes={resumes} />
+      </div>
+    </nav>
   );
 }

@@ -1,4 +1,5 @@
 import { AppSidebar } from "@/components/AppSidebar";
+import { SidebarFrame } from "@/components/SidebarFrame";
 
 export default function ApplicationsLayout({
   children,
@@ -6,9 +7,11 @@ export default function ApplicationsLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex gap-8 items-start">
-      <AppSidebar />
-      <div className="flex-1 min-w-0">{children}</div>
-    </div>
+    <SidebarFrame
+      desktopSidebar={<AppSidebar />}
+      mobileSidebar={<AppSidebar />}
+    >
+      {children}
+    </SidebarFrame>
   );
 }

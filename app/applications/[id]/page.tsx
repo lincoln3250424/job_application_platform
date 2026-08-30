@@ -98,19 +98,22 @@ export default async function ApplicationDetailPage({
         </div>
       </details>
 
-      <nav className="flex gap-1 border-b border-rule overflow-x-auto">
-        {TABS.map((t) => {
+      <nav className="flex gap-1.5 bg-tab border border-rule rounded-xl p-1.5 overflow-x-auto">
+        {TABS.map((t, i) => {
           const active = activeTab === t.key;
           return (
             <Link
               key={t.key}
               href={`/applications/${id}?tab=${t.key}`}
-              className={`font-mono text-xs uppercase tracking-wide px-4 py-3 border-b-2 -mb-px whitespace-nowrap transition-colors ${
+              className={`flex-1 min-w-fit text-center font-mono text-xs uppercase tracking-wide px-4 py-2.5 rounded-lg whitespace-nowrap transition-colors ${
                 active
-                  ? "border-ink text-ink"
-                  : "border-transparent text-ink-soft hover:text-ink"
+                  ? "bg-ink text-paper-hi shadow-sm"
+                  : "text-ink-soft hover:text-ink hover:bg-paper"
               }`}
             >
+              <span className={`mr-1.5 ${active ? "opacity-70" : "opacity-50"}`}>
+                {String(i + 1).padStart(2, "0")}
+              </span>
               {t.label}
             </Link>
           );
