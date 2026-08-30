@@ -3,7 +3,6 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { checkQuota } from "@/lib/quota";
 import { NewApplicationForm } from "@/components/NewApplicationForm";
-import { BillingPanel } from "@/components/BillingPanel";
 
 const VERDICT_STYLES: Record<string, string> = {
   strong: "text-green border-green",
@@ -21,11 +20,7 @@ export default async function DashboardPage({
 
   const { billing } = await searchParams;
 
-  const [user, applications, resumes, quota] = await Promise.all([
-    prisma.user.findUniqueOrThrow({
-      where: { id: session.userId },
-      include: { subscription: true },
-    }),
+  const [applications, resumes, quota] = await Promise.all([
     prisma.application.findMany({
       where: { userId: session.userId },
       orderBy: { createdAt: "desc" },
@@ -58,14 +53,6 @@ export default async function DashboardPage({
           Checkout canceled — no changes made.
         </div>
       )}
-
-      <BillingPanel
-        plan={user.plan}
-        monthlyRunQuota={user.monthlyRunQuota}
-        subscriptionStatus={user.subscription?.status}
-        cancelAtPeriodEnd={user.subscription?.cancelAtPeriodEnd}
-        currentPeriodEnd={user.subscription?.currentPeriodEnd?.toISOString() ?? null}
-      />
 
       <div>
         <div className="flex items-baseline justify-between mb-1">

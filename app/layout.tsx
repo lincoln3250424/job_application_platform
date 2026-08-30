@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
 import { getSession } from "@/lib/auth";
-import { checkQuota } from "@/lib/quota";
 import { NavAuthActions } from "@/components/NavAuthActions";
 import { SparklesIcon, SettingsIcon } from "@/components/icons";
 
@@ -18,14 +17,6 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const session = await getSession();
-  let quota: { used: number; quota: number } | null = null;
-  if (session) {
-    try {
-      quota = await checkQuota(session.userId);
-    } catch {
-      quota = null;
-    }
-  }
 
   return (
     <html lang="en" className="h-full">
@@ -47,18 +38,6 @@ export default async function RootLayout({
             <div className="flex items-center gap-5 font-mono text-[13px] shrink-0">
               {session ? (
                 <>
-                  <span className="text-ink-soft hidden lg:inline">
-                    Monthly Runs:{" "}
-                    <strong className="text-ink">
-                      {quota?.used ?? "—"} / {quota?.quota ?? "—"} free
-                    </strong>{" "}
-                    <Link
-                      href="/dashboard?billing=upgrade"
-                      className="underline ml-1"
-                    >
-                      Upgrade
-                    </Link>
-                  </span>
                   <button
                     type="button"
                     title="Coming soon"

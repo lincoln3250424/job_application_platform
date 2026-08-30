@@ -1,16 +1,16 @@
 import { GoogleGenAI } from "@google/genai";
 
-// Model assignment: cheap/fast Flash for mechanical extraction, Flash for the
-// three agents that need actual judgment, until billing is enabled on the
-// Google project. Google retired the 2.5 models for new projects (they 404),
-// and the free tier currently grants zero quota to pro models ("limit: 0" on
-// gemini-3.1-pro) — so both tiers default to gemini-3.6-flash, which is
-// available free. Once billing is on, set GEMINI_MODEL_QUALITY to a pro model
-// (e.g. gemini-pro-latest) via env vars without touching code. See the system
-// design doc, Section 2, for the original tier reasoning.
-export const MODEL_FAST = process.env.GEMINI_MODEL_FAST || "gemini-3.6-flash";
+// Model assignment: both tiers default to gemini-3.5-flash-lite — the
+// cheapest, fastest tier available on the current free plan. Google retired
+// the 2.5 models for new projects (they 404) and the free tier grants zero
+// quota to pro models, so lite keeps the pipeline running within the free
+// limits. Once billing is enabled, set GEMINI_MODEL_QUALITY to a stronger
+// model (e.g. gemini-3.6-flash or gemini-pro-latest) via env vars without
+// touching code. See the system design doc, Section 2, for tier reasoning.
+export const MODEL_FAST =
+  process.env.GEMINI_MODEL_FAST || "gemini-3.5-flash-lite";
 export const MODEL_QUALITY =
-  process.env.GEMINI_MODEL_QUALITY || "gemini-3.6-flash";
+  process.env.GEMINI_MODEL_QUALITY || "gemini-3.5-flash-lite";
 
 let client: GoogleGenAI | null = null;
 
