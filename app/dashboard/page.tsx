@@ -69,7 +69,7 @@ export default async function DashboardPage({
 
       <div>
         <div className="flex items-baseline justify-between mb-1">
-          <h1 className="font-display font-bold text-2xl">New application</h1>
+          <h1 className="font-display font-bold text-2xl">New Application</h1>
           <span className="font-mono text-[11px] text-ink-soft">
             {quota.used}/{quota.quota} runs this month
           </span>

@@ -1,32 +1,15 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter, IBM_Plex_Mono } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
 import { getSession } from "@/lib/auth";
+import { checkQuota } from "@/lib/quota";
 import { NavAuthActions } from "@/components/NavAuthActions";
-
-const fraunces = Fraunces({
-  variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["400", "600", "700", "900"],
-  style: ["normal", "italic"],
-});
-
-const inter = Inter({
-  variable: "--font-body",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-});
-
-const plexMono = IBM_Plex_Mono({
-  variable: "--font-mono",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-});
+import { SparklesIcon, SettingsIcon } from "@/components/icons";
 
 export const metadata: Metadata = {
-  title: "The Desk — Job Application Review",
-  description: "Run your job applications through a three-agent review desk.",
+  title: "Job Application AI Helpdesk",
+  description:
+    "Run your job applications through a four-agent review desk.",
 };
 
 export default async function RootLayout({
@@ -35,32 +18,71 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const session = await getSession();
+  let quota: { used: number; quota: number } | null = null;
+  if (session) {
+    try {
+      quota = await checkQuota(session.userId);
+    } catch {
+      quota = null;
+    }
+  }
 
   return (
-    <html
-      lang="en"
-      className={`${fraunces.variable} ${inter.variable} ${plexMono.variable} h-full`}
-    >
-      <body className="min-h-full flex flex-col">
-        <header className="border-b border-rule bg-paper-hi">
-          <div className="max-w-5xl mx-auto px-5 py-4 flex items-center justify-between">
-            <Link
-              href={session ? "/dashboard" : "/"}
-              className="font-display font-extrabold text-lg tracking-tight"
-            >
-              The Desk
-            </Link>
-            <NavAuthActions loggedIn={!!session} email={session?.email} />
+    <html lang="en" className="h-full">
+      <body className="min-h-full flex flex-col bg-paper text-ink font-mono">
+        <header className="border-b border-rule bg-paper">
+          <div className="px-7 py-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="w-[30px] h-[30px] bg-ink text-paper-hi flex items-center justify-center shrink-0">
+                <SparklesIcon className="w-4 h-4" />
+              </span>
+              <Link
+                href={session ? "/dashboard" : "/"}
+                className="font-display font-bold text-[19px] tracking-tight truncate"
+              >
+                Job Application AI Helpdesk
+              </Link>
+            </div>
+
+            <div className="flex items-center gap-5 font-mono text-[13px] shrink-0">
+              {session ? (
+                <>
+                  <span className="text-ink-soft hidden lg:inline">
+                    Monthly Runs:{" "}
+                    <strong className="text-ink">
+                      {quota?.used ?? "—"} / {quota?.quota ?? "—"} free
+                    </strong>{" "}
+                    <Link
+                      href="/dashboard?billing=upgrade"
+                      className="underline ml-1"
+                    >
+                      Upgrade
+                    </Link>
+                  </span>
+                  <button
+                    type="button"
+                    title="Coming soon"
+                    className="hidden md:inline-block text-xs uppercase tracking-wide border border-ink px-3 py-1.5 hover:bg-ink hover:text-paper-hi transition-colors"
+                  >
+                    Extension Capture
+                  </button>
+                  <Link
+                    href="/dashboard?billing=upgrade"
+                    title="Settings"
+                    aria-label="Settings"
+                    className="text-ink-soft hover:text-ink"
+                  >
+                    <SettingsIcon className="w-[18px] h-[18px]" />
+                  </Link>
+                  <NavAuthActions loggedIn={!!session} email={session.email} />
+                </>
+              ) : (
+                <NavAuthActions loggedIn={false} />
+              )}
+            </div>
           </div>
         </header>
-        <main className="flex-1 max-w-7xl mx-auto w-full px-5 py-8">
-          {children}
-        </main>
-        <footer className="border-t border-rule text-center py-6">
-          <span className="font-mono text-[10.5px] text-ink-soft">
-            Job posts and resumes are stored only for your account.
-          </span>
-        </footer>
+        <main className="flex-1 w-full px-5 md:px-8 py-8">{children}</main>
       </body>
     </html>
   );

@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --paper: #e7e2d5;
-  --paper-hi: #f1ecdf;
-  --tab: #d7cfb8;
-  --ink: #241f19;
-  --ink-soft: #6c6252;
-  --rule: #b9af95;
-  --green: #2f5d45;
-  --amber: #b4762a;
-  --red: #a6362b;
-  --blue: #3b5578;
+  --paper: #ede9dc;
+  --paper-hi: #e6e1d2;
+  --tab: #ddd6c1;
+  --ink: #221f1a;
+  --ink-soft: #6b5f4e;
+  --rule: #c9c1ae;
+  --green: #3f5d3a;
+  --amber: #8c3b2e;
+  --red: #8c3b2e;
+  --blue: #221f1a;
 }
 
 @theme inline {
@@ -24,15 +24,23 @@
   --color-amber: var(--amber);
   --color-red: var(--red);
   --color-blue: var(--blue);
-  --font-display: "Fraunces", serif;
-  --font-body: "Inter", sans-serif;
-  --font-mono: "IBM Plex Mono", monospace;
+  --font-display: Georgia, "Times New Roman", serif;
+  --font-body: "Courier Prime", "Courier New", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --font-mono: "Courier Prime", "Courier New", ui-monospace, "Cascadia Mono", Consolas, monospace;
 }
 
 body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-body);
+}
+
+/* Design system: square corners everywhere (avatar circle is the one exception). */
+* {
+  border-radius: 0 !important;
+}
+.rounded-full {
+  border-radius: 9999px !important;
 }
 
 .prose-agent h2 {

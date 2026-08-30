@@ -33,7 +33,7 @@ export function SidebarFrame({
             className="absolute inset-0 bg-black/30"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute left-0 top-0 bottom-0 w-72 max-w-[85vw] bg-paper-hi border-r border-rule overflow-y-auto p-5 shadow-xl">
+          <div className="absolute left-0 top-0 bottom-0 w-[250px] max-w-[85vw] bg-paper border-r border-rule overflow-y-auto p-5">
             <div className="flex justify-end mb-3">
               <button
                 type="button"
@@ -49,7 +49,7 @@ export function SidebarFrame({
       )}
 
       <div className="flex gap-8 lg:gap-10 items-start">
-        <div className="hidden md:block w-72 shrink-0 sticky top-8 self-start max-h-[calc(100vh-4rem)] overflow-y-auto pr-1">
+        <div className="hidden md:block w-[250px] shrink-0 sticky top-8 self-start max-h-[calc(100vh-4rem)] overflow-y-auto pr-1">
           {desktopSidebar}
         </div>
         <div className="flex-1 min-w-0">{children}</div>

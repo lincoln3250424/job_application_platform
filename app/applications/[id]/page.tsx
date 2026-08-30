@@ -107,7 +107,7 @@ export default async function ApplicationDetailPage({
               href={`/applications/${id}?tab=${t.key}`}
               className={`flex-1 min-w-fit text-center font-mono text-xs uppercase tracking-wide px-4 py-2.5 rounded-lg whitespace-nowrap transition-colors ${
                 active
-                  ? "bg-ink text-paper-hi shadow-sm"
+                  ? "bg-ink text-paper-hi"
                   : "text-ink-soft hover:text-ink hover:bg-paper"
               }`}
             >

@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySessionToken } from "@/lib/auth";
 
-const PROTECTED_PREFIXES = ["/dashboard", "/applications"];
+const PROTECTED_PREFIXES = [
+  "/dashboard",
+  "/applications",
+  "/resumes",
+  "/unit-economics",
+];
 const AUTH_PAGES = ["/login", "/register"];
 
 export async function proxy(req: NextRequest) {
@@ -32,5 +37,12 @@ export async function proxy(req: NextRequest) {
 // choice to make here), which is exactly what we need since verifySessionToken
 // pulls in `jose` — fine either way, but no runtime flag required.
 export const config = {
-  matcher: ["/dashboard/:path*", "/applications/:path*", "/login", "/register"],
+  matcher: [
+    "/dashboard/:path*",
+    "/applications/:path*",
+    "/resumes/:path*",
+    "/unit-economics/:path*",
+    "/login",
+    "/register",
+  ],
 };

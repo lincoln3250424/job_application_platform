@@ -20,13 +20,13 @@ export function NavAuthActions({
 
   if (!loggedIn) {
     return (
-      <div className="flex items-center gap-4 font-mono text-xs uppercase tracking-wide">
-        <Link href="/login" className="text-ink-soft hover:text-ink">
+      <div className="flex items-center gap-5 font-mono text-[13px] uppercase tracking-wide">
+        <Link href="/login" className="text-ink-soft hover:text-ink underline">
           Log in
         </Link>
         <Link
           href="/register"
-          className="bg-ink text-paper-hi px-3 py-2 rounded-md hover:bg-[#3a332a]"
+          className="bg-ink text-paper-hi px-3.5 py-2 hover:bg-[#3a332a] transition-colors"
         >
           Sign up
         </Link>
@@ -34,14 +34,19 @@ export function NavAuthActions({
     );
   }
 
+  const initial = (email?.[0] ?? "U").toUpperCase();
+
   return (
-    <div className="flex items-center gap-4 font-mono text-xs">
-      <span className="text-ink-soft hidden sm:inline">{email}</span>
+    <div className="flex items-center gap-3 font-mono text-[13px]">
+      <span className="hidden sm:inline text-ink-soft">{email}</span>
+      <span className="w-[30px] h-[30px] rounded-full bg-ink text-paper-hi flex items-center justify-center text-[13px] font-bold">
+        {initial}
+      </span>
       <button
         onClick={handleLogout}
-        className="uppercase tracking-wide border border-ink rounded-md px-3 py-2 hover:bg-ink hover:text-paper-hi transition-colors"
+        className="uppercase tracking-wide bg-ink text-paper-hi px-3.5 py-2 hover:bg-[#3a332a] transition-colors"
       >
-        Log out
+        Sign out
       </button>
     </div>
   );
