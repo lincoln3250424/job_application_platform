@@ -27,7 +27,7 @@ function LoginForm() {
         setError(data.error || "Something went wrong.");
         return;
       }
-      router.push(searchParams.get("next") || "/dashboard");
+      router.push(searchParams.get("next") || "/applications");
       router.refresh();
     } catch {
       setError("Network error. Try again.");

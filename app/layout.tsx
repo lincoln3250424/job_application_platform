@@ -28,7 +28,7 @@ export default async function RootLayout({
                 <SparklesIcon className="w-4 h-4" />
               </span>
               <Link
-                href={session ? "/dashboard" : "/"}
+                href={session ? "/applications" : "/"}
                 className="font-display font-bold text-[19px] tracking-tight truncate"
               >
                 Job Application AI Helpdesk

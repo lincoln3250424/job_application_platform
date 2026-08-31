@@ -27,7 +27,7 @@ export default function RegisterPage() {
         setError(data.error || "Something went wrong.");
         return;
       }
-      router.push("/dashboard");
+      router.push("/applications");
       router.refresh();
     } catch {
       setError("Network error. Try again.");

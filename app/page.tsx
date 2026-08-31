@@ -4,7 +4,7 @@ import { getSession } from "@/lib/auth";
 
 export default async function HomePage() {
   const session = await getSession();
-  if (session) redirect("/dashboard");
+  if (session) redirect("/applications");
 
   return (
     <div className="max-w-2xl mx-auto text-center py-16">
